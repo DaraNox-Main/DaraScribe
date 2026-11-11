@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DaraScribe</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600&family=Source+Serif+4:wght@400;600&display=swap">
+<style>
+:root{--bg:#f6f7f9;--panel:#fff;--ink:#1b2430;--mute:#677284;--line:#dde2e9;--flag:#ffe9a8;--flag-b:#e0b73c;--old:#fde0dd;--old-t:#a23b32;--new:#d5f0de;--new-t:#1d6b3c;--accent:#2f5bd8;--ok:#2e9a5b;--warn:#d89a1e;--bad:#cf4a3c;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12161c;--panel:#1a2029;--ink:#e8ecf2;--mute:#97a2b3;--line:#2c3541;--flag:#4a3d12;--flag-b:#b8932b;--old:#4a2522;--old-t:#f1a49c;--new:#16402a;--new-t:#8fdcae;--accent:#7b9bff}}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Be Vietnam Pro",system-ui,sans-serif}
+[hidden]{display:none!important}
+.app{max-width:1020px;margin:0 auto;padding:20px 16px 40px}
+header{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline;justify-content:space-between;margin-bottom:14px}
+h1{font-size:20px;margin:0;font-weight:600}
+.sub{color:var(--mute);font-size:13px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:16px;align-items:start}
+@media(max-width:820px){.grid{grid-template-columns:1fr}.side{order:-1}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line)}
+.bar .sp{flex:1}
+button{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:6px 11px;border-radius:7px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+button:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+.chip{font-size:12px;color:var(--mute);border:1px solid var(--line);border-radius:99px;padding:2px 9px}
+textarea,#doc{width:100%;min-height:340px;padding:16px 18px;font:17px/1.75 "Source Serif 4",Georgia,serif;color:var(--ink);background:transparent;border:0;resize:vertical;white-space:pre-wrap;word-wrap:break-word;display:block}
+textarea{outline:none}
+#wrap{position:relative}
+mark.f{background:var(--flag);color:inherit;border-bottom:2px solid var(--flag-b);border-radius:3px;padding:0 1px;cursor:pointer}
+mark.f.ignored{background:transparent;border-bottom:2px dotted var(--mute);opacity:.8}
+.pair{cursor:pointer}
+.pair del{background:var(--old);color:var(--old-t);border-radius:3px;padding:0 2px}
+.pair ins{background:var(--new);color:var(--new-t);text-decoration:none;border-radius:3px;padding:0 2px;margin-left:4px}
+#card{position:absolute;z-index:5;width:min(350px,calc(100% - 8px));background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.18);padding:14px;font-size:14px;display:none}
+#card h3{margin:0 0 8px;font-size:14px;font-weight:600}
+#card .lbl{font-size:12px;font-weight:600;color:var(--mute);margin:10px 0 4px}
+#card p{margin:0}
+.sg{display:block;width:100%;text-align:left;margin:4px 0;padding:8px 10px;font-family:"Source Serif 4",Georgia,serif;font-size:15px}
+.sg small{display:block;font:12px "Be Vietnam Pro",sans-serif;color:var(--mute)}
+.hint{margin-top:8px;color:var(--mute);font-size:13px}
+.row{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+#card textarea{min-height:64px;padding:8px 10px;font-size:15px;line-height:1.5;border:1px solid var(--line);border-radius:7px;resize:vertical;margin:0;background:var(--bg)}
+.side{padding:16px}
+.side h2{font-size:14px;margin:0 0 4px;font-weight:600}
+.big{font-size:40px;font-weight:600;line-height:1.1}
+.big span{font-size:16px;color:var(--mute);font-weight:400}
+.gauge{position:relative;height:10px;background:var(--line);border-radius:99px;margin:12px 0 4px;overflow:visible}
+.gauge i{display:block;height:100%;border-radius:99px;transition:width .35s,background .35s}
+.gauge b{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink);left:20%}
+.tick{font-size:12px;color:var(--mute);margin-left:calc(20% - 40px)}
+.mini{margin-top:14px}
+.mini div{display:flex;justify-content:space-between;font-size:13px;margin-top:8px}
+.mini .t{height:5px;background:var(--line);border-radius:9px;margin-top:3px}
+.mini .t i{display:block;height:100%;background:var(--accent);border-radius:9px;transition:width .35s}
+.note{margin-top:16px;padding-top:12px;border-top:1px solid var(--line);font-size:12px;color:var(--mute)}
+.left{padding:10px 14px;font-size:13px;color:var(--mute);border-top:1px solid var(--line)}
+.tabs{display:flex;gap:6px;margin:0 0 14px;border-bottom:1px solid var(--line)}
+.tabs a{padding:8px 14px;color:var(--mute);text-decoration:none;border-bottom:2px solid transparent;margin-bottom:-1px;font-size:14px}
+.tabs a.on{color:var(--ink);border-color:var(--accent);font-weight:600}
+.hum{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:13px}
+.hum .big{font-size:28px;color:var(--ok)}
+.sigs{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;align-items:start}
+@media(max-width:820px){.sigs{grid-template-columns:1fr}}
+.sigs .panel{padding:16px 18px}
+.sigs h2{font-size:16px;margin:0 0 6px;font-weight:600}
+.sg-row{display:flex;gap:12px;justify-content:space-between;padding:12px 0;border-top:1px solid var(--line)}
+.sg-row b{display:block;font-weight:600;font-size:14px}
+.sg-row .d{display:block;color:var(--mute);font-size:13px}
+.sg-row em{display:inline-block;margin-top:6px;font-style:normal;font-size:12px;background:var(--bg);border-radius:5px;padding:2px 8px}
+.pc{height:fit-content;font-size:12px;font-weight:600;border-radius:99px;padding:3px 10px;white-space:nowrap}
+.pc.a{background:rgba(207,74,60,.14);color:var(--bad)}
+.pc.h{background:rgba(46,154,91,.16);color:var(--ok)}
+.plan{max-width:760px;margin:0 auto}
+.plan .panel{padding:18px;margin-bottom:14px}
+.plan h2{margin:0 0 4px;font-size:16px;font-weight:600}
+.plan label{display:block;font-size:13px;color:var(--mute);margin:10px 0 4px}
+.plan input,.plan textarea{width:100%;font:15px/1.6 'Source Serif 4',Georgia,serif;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);min-height:0;resize:vertical;display:block}
+.q{margin-top:14px;padding:12px;border-left:3px solid var(--accent);background:var(--bg);border-radius:0 8px 8px 0}
+.q p{margin:0 0 8px;font-size:14px}
+.tell{margin-top:8px;font-size:13px;padding:8px 10px;border-radius:8px;background:var(--flag)}
+.vd{padding:10px 12px;border-radius:9px;margin-bottom:14px;border:1px solid var(--line);font-size:13px}
+.vd b{display:block;font-size:15px}.vd span{display:block;color:var(--mute);margin:2px 0}.vd small{color:var(--mute)}
+.vd.ok{border-color:var(--ok)}.vd.warn{border-color:var(--warn)}.vd.bad{border-color:var(--bad)}
+.wait{color:var(--mute);font-size:14px;padding:6px 0;animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.4}}
+.sk{height:70px;border-radius:10px;background:var(--line);margin:10px 0;opacity:.5;animation:pulse 1.2s ease-in-out infinite}
+.busy .big,.busy .gauge,.busy #mini{opacity:.35}
+#hscore{color:var(--accent)}
+.pc.n{background:var(--bg);color:var(--mute)}
+.fx{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+@media(max-width:820px){.fx{grid-template-columns:1fr}}
+.fx .panel{padding:16px 18px}.fx .wide{grid-column:1/-1}
+.fx h3{margin:0 0 4px;font-size:16px;font-weight:600}
+.map{font:16px/1.9 'Source Serif 4',Georgia,serif;white-space:pre-wrap;margin-top:8px}
+.map span{border-radius:3px;padding:1px 0}
+.fr{display:grid;grid-template-columns:1fr auto;gap:2px 10px;font-size:13px;margin-top:10px}
+.fr i{grid-column:1/-1;display:block;height:4px;border-radius:9px;background:var(--accent);opacity:.8}
+.spw{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:8px 0;border-top:1px solid var(--line)}
+.stp{display:flex;gap:8px;align-items:center;margin-bottom:10px;font-size:13px}
+.stp span{padding:3px 10px;border-radius:99px;border:1px solid var(--line);color:var(--mute)}
+.stp span.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.stp small{margin-left:auto;color:var(--mute)}
+.tree,.tree ul{list-style:none;margin:0;padding-left:20px}
+.tree ul{border-left:1px solid var(--line);margin-left:6px}
+.tree li{position:relative;margin:6px 0;font-size:14px;padding-left:12px}
+.tree li::before{content:'';position:absolute;left:-1px;top:12px;width:10px;border-top:1px solid var(--line)}
+.tree>li{padding-left:0}.tree>li::before{display:none}
+.essay{white-space:pre-wrap;font:16px/1.8 'Source Serif 4',Georgia,serif;margin:8px 0}
+.setup{padding:16px 18px;margin-bottom:14px}
+.setup label{display:block;font-size:13px;color:var(--mute);margin:12px 0 4px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chips button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+#req{min-height:0;padding:9px 11px;font:15px/1.5 'Source Serif 4',Georgia,serif;border:1px solid var(--line);border-radius:8px;background:var(--bg);resize:vertical}
+.setsum{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px;font-size:13px;color:var(--mute)}
+@media(prefers-reduced-motion:reduce){.wait,.sk{animation:none}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <h1>DaraScribe</h1>
+  <div class="sub">Nghiên cứu và phát triển bởi DaraNox</div>
+</header>
+<nav class="tabs"><a href="#kiem-tra" id="t-check">Kiểm tra văn phong</a><a href="#dau-vet" id="t-fx">Báo cáo dấu vết</a><a href="#dan-bai" id="t-plan">Lập dàn bài</a></nav>
+<div id="v-check">
+<div class="panel setup" id="setup"><h2>Trước khi phân tích</h2><p class="sub" style="margin:2px 0 0">Chọn kiểu văn phong của bài viết</p><div class="chips" id="chips"></div><label for="req">Yêu cầu riêng (không bắt buộc)</label><textarea id="req" rows="2" placeholder="Ví dụ: giữ nguyên thuật ngữ: dược động học, sinh khả dụng. Cho phép câu dài. Tránh: nhìn chung."></textarea><div class="row"><button class="pri" id="s-go">Bắt đầu phân tích</button><button id="s-def">Dùng thiết lập mặc định</button></div></div>
+<div class="setsum" id="setsum" hidden></div>
+<div class="grid">
+  <section class="panel">
+    <div class="bar" id="bar"></div>
+    <div id="wrap">
+      <textarea id="ta" aria-label="Văn bản" spellcheck="false"></textarea>
+      <div id="doc" hidden></div>
+      <div id="card" role="dialog"></div>
+    </div>
+    <div class="left" id="left" hidden></div>
+  </section>
+  <aside class="panel side" id="side">
+    <div id="verdict"></div><h2>Mức giống văn AI (tham khảo)</h2>
+    <div class="big" id="score">0<span>%</span></div>
+    <div class="gauge"><i id="g"></i><b></b></div>
+    <div class="tick">mục tiêu 20%</div>
+    <h2 style="margin-top:18px">Mức giống người viết (tham khảo)</h2>
+    <div class="big" id="hscore">0<span>%</span></div>
+    <div class="gauge"><i id="gh"></i></div>
+    <div class="mini" id="mini"></div>
+    <div class="note">Đây là số liệu tham khảo từ bộ chấm nội bộ, là ước lượng thống kê từ nhiều nhóm dấu hiệu, không phải bằng chứng xác định nguồn gốc văn bản. Các trình kiểm tra AI khác có thể cho con số khác.</div>
+  </aside>
+</div>
+</div>
+<div id="v-fx" hidden><div class="fx" id="fx"></div></div>
+<div id="v-plan" hidden>
+<div class="plan">
+ <div class="panel"><h2>1. Chọn chủ đề</h2><label for="p-topic">Bạn muốn viết về điều gì?</label><input id="p-topic" placeholder="Ví dụ: lần đầu tôi đến Đà Lạt"></div>
+ <div class="panel"><h2>2. Nêu luận điểm</h2><label for="p-claim">Điều chính bạn muốn người đọc nhớ hoặc tin là gì? (một câu)</label><textarea id="p-claim" rows="2"></textarea></div>
+ <div class="panel"><h2>3. Thêm luận cứ</h2><label>Từ 2 đến 4 ý giúp luận điểm đứng vững</label><div id="p-pts"></div><div class="row"><button data-p="add">Thêm luận cứ</button><button class="pri" data-p="go">Bắt đầu triển khai</button></div><p class="sub" id="p-msg" style="margin:8px 0 0"></p></div>
+ <div class="panel" id="p-wiz" hidden></div>
+ <div id="p-tree" hidden></div>
+</div>
+</div>
+</div>
+<script>
+(function(){
+var $=function(s){return document.querySelector(s)};
+var esc=function(s){return s.replace(/[&<>]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})};
+var cap=function(w){return w.charAt(0).toUpperCase()+w.slice(1)};
+
+/* ---------- Bộ luật (mỗi ngôn ngữ một nhóm) ---------- */
+function S(ws,title,reason,alts){return{start:1,title:title,reason:reason,alts:alts,re:new RegExp('(?<=^|[.!?…]\\s+)(?:'+ws+')[,;]?\\s*(\\p{L}+)','gimu')}}
+function P(re,title,reason,alts,hint){return{title:title,reason:reason,alts:alts||[],hint:hint,re:new RegExp(re,'giu')}}
+var RULES=[
+ S('hơn nữa','Từ nối “Hơn nữa”','“Hơn nữa” nghe như văn nghị luận và là từ nối AI hay dùng để chuyển ý. Khi viết thường ngày, ý sau thường tự nối với ý trước mà không cần từ chuyển.',['Còn','Với lại','']),
+ S('bên cạnh đó|ngoài ra','Từ nối “Bên cạnh đó”','Từ nối này được dùng dày đặc trong văn do AI viết, nên khi xuất hiện đều đặn đầu câu, đoạn văn có cảm giác lắp ghép.',['Thêm nữa','Còn','']),
+ S('tóm lại|nhìn chung|có thể thấy rằng|có thể thấy','Mở kết luận theo khuôn','Câu kết bắt đầu bằng “Tóm lại/Nhìn chung” là mẫu lặp ở cuối gần như mọi đoạn AI. Người viết thật thường kết bằng một nhận định cụ thể của mình.',['Nói gọn lại','Rốt cuộc','']),
+ P('đóng vai trò (?:quan trọng|then chốt|thiết yếu|quyết định)','“Đóng vai trò quan trọng”','Cụm này trừu tượng: nó khẳng định tầm quan trọng nhưng không cho biết quan trọng ở điểm nào, nên người đọc không học được gì thêm.',['rất quan trọng','có ảnh hưởng lớn','không thể thiếu'],'Thử nói rõ nó quan trọng ở đâu, bằng một con số hoặc một tình huống.'),
+ P('trong bối cảnh (?:hiện nay|ngày nay|hiện đại|toàn cầu hóa)','Mở bài sáo “Trong bối cảnh…”','Cụm mở đầu này ghép được vào bất kỳ đề tài nào, vì vậy nó không mang thông tin riêng và khiến văn bản nghe chung chung.',['Bây giờ','Hiện nay'],'Mở bằng một chi tiết cụ thể của bạn sẽ tự nhiên hơn.'),
+ P('(?:mang lại|đem lại|mang đến) nhiều (?:lợi ích|giá trị)','“Mang lại nhiều lợi ích”','Câu khẳng định có lợi ích nhưng không nói lợi ích gì, kiểu viết an toàn mà AI rất hay chọn.',['giúp ích khá nhiều'],'Thay bằng một lợi ích cụ thể, ví dụ “giúp học sinh ôn bài nhanh hơn”.'),
+ P('một cách (\\p{L}+)','Cấu trúc “một cách + tính từ”','Cấu trúc này giống văn dịch từ tiếng Anh (“in an effective way”). Tiếng Việt thường đặt tính từ hoặc trạng từ ngay sau động từ.',function(m){return[m[1]]}),
+ P('không chỉ [^.!?\\n]{3,60}? mà còn','Cấu trúc “không chỉ… mà còn…”','Hai vế cân đối này được AI dùng rất dày. Khi lặp lại, văn bản nghe như làm theo công thức.',[],'Thử tách thành hai câu ngắn: ý chính nói trước, ý phụ nói sau.'),
+ S('furthermore|moreover|additionally|in addition','Từ nối cứng (Furthermore…)','Những từ nối kiểu “Furthermore/Moreover” rất hiếm trong văn nói và văn thường ngày, nhưng AI dùng liên tục để nối câu.',['Also,','And','']),
+ S('in conclusion|in summary|to sum up|overall','Mở kết luận theo khuôn','Câu kết “In conclusion/Overall” là mẫu lặp ở cuối đoạn AI. Kết bằng một nhận định riêng của bạn sẽ có dấu ấn hơn.',['So,','Bottom line,','']),
+ P('plays? an? (?:crucial|vital|pivotal|key) role in','“Plays a crucial role in”','Cụm này khẳng định tầm quan trọng mà không nói cụ thể vì sao, và xuất hiện cực kỳ nhiều trong văn do AI viết.',['matters for','is key to'],'Hãy nêu rõ nó quan trọng ở điểm nào.'),
+ P('delv(?:e|es|ed|ing) (?:in)?to','“Delve into”','“Delve” là từ rất hiếm khi người bản ngữ dùng trong văn thường, nhưng lại phổ biến trong văn AI.',['dig into','look at']),
+ P('in today[’\']s (?:fast-paced|digital|modern) (?:world|age|era)','Mở bài sáo “In today’s world”','Cụm mở đầu này ghép được vào mọi đề tài nên không mang thông tin riêng.',[],'Mở bằng một chi tiết hoặc con số cụ thể.'),
+ P('a testament to','“A testament to”','Cách nói hoa mỹ này hay được AI dùng để nâng tầm một ý, trong khi động từ đơn giản thường đủ.',['proof of','a sign of']),
+ P('\\bleverag(?:e|es|ed|ing)\\b','“Leverage”','“Leverage” nghe như văn kinh doanh. Trong văn thường, “use” tự nhiên hơn.',['use'])
+];
+var KEEP=[],CUSTOM=[];
+var OPENER={title:'Ba câu liền mở đầu giống nhau',reason:'Khi ba câu liên tiếp bắt đầu bằng cùng một từ, nhịp văn bị đều và máy móc. Người viết thật thường đổi cách vào câu.',alts:[],hint:'Thử đổi cách mở đầu câu này, hoặc gộp hai câu lại.'};
+
+function suggs(r,m){
+ if(r.start)return r.alts.map(function(a){return a?{tag:'',text:a+' '+m[1]}:{tag:'Bỏ từ nối',text:cap(m[1])}});
+ var a=typeof r.alts==='function'?r.alts(m):r.alts;return a.map(function(x){return{tag:'',text:x}});
+}
+function phr(t){
+ var out=[],i,x;
+ RULES.concat(CUSTOM).forEach(function(r){for(var m of t.matchAll(r.re))if(!KEEP.some(function(k){return m[0].toLowerCase().indexOf(k)>=0}))out.push({s:m.index,e:m.index+m[0].length,r:r,m:m})});
+ var se=[];for(var m of t.matchAll(/[^.!?\n]+[.!?]*/g)){var lead=m[0].length-m[0].trimStart().length,w=(m[0].trim().match(/^\p{L}+/u)||[''])[0];if(w)se.push({i:m.index+lead,w:w.toLowerCase(),raw:w})}
+ for(i=2;i<se.length;i++)if(se[i].w.length>1&&se[i].w===se[i-1].w&&se[i].w===se[i-2].w)out.push({s:se[i].i,e:se[i].i+se[i].raw.length,r:OPENER,m:[se[i].raw]});
+ out.sort(function(a,b){return a.s-b.s||b.e-a.e});
+ var res=[],end=-1;out.forEach(function(x){if(x.s>=end){res.push(x);end=x.e}});return res;
+}
+function wc(s){
+ var cj=s.match(/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/gu);if(cj&&cj.length>3)return Math.ceil(cj.length/1.6);
+ var L=s.split(/,\s*/).map(function(x){return x.trim().split(/\s+/).length}),tot=L.reduce(function(a,b){return a+b},0),run=0,rw=0,bw=0;
+ L.forEach(function(l){if(l<=4){run++;rw+=l;if(run>=3&&rw>bw)bw=rw}else{run=0;rw=0}});
+ return bw?tot-bw+2:tot;
+}
+function sents(t){var r=[];for(var m of t.matchAll(/[^.!?。！？;\n]+[.!?。！？;]*/g)){var raw=m[0],tb=raw.replace(/^(?:[\s*•\-–>#]|\d+[.)]\s)+/,'').trimStart(),lead=raw.length-tb.length,s=tb.trimEnd();if(s)r.push({s:m.index+lead,e:m.index+lead+s.length,t:s,w:wc(s)})}return r}
+function splitS(t){
+ var tail=t.match(/[.!?]*$/)[0],b=t.slice(0,t.length-tail.length),tot=b.split(/\s+/).length,best=null,bd=1e9;
+ for(var m of b.matchAll(/[,;:]\s+/g)){var L=b.slice(0,m.index),k=L.split(/\s+/).length;
+  if(k<6||tot-k<6||(L.match(/\(/g)||[]).length!==(L.match(/\)/g)||[]).length)continue;
+  if(Math.abs(k-tot/2)<bd){bd=Math.abs(k-tot/2);best=[L,b.slice(m.index+m[0].length)]}}
+ return best?best[0]+'. '+cap(best[1].replace(/^(?:thì|và|mà|nên)\s+/i,''))+(tail||'.'):null;
+}
+var R={
+ long:{title:'Câu quá dài',reason:'Câu dài liên tục làm nhịp văn đều và nặng, người đọc khó lấy hơi. Người viết thật thường xen những câu ngắn để tạo điểm nhấn.',hint:'Tách ở chỗ ý đổi hướng, hoặc bỏ bớt vế phụ.'},
+ uni:{title:'Nhịp câu đều, thiếu câu ngắn',reason:'Cả đoạn toàn câu dài vừa, không có câu ngắn nào, nên nhịp đều như máy. Một câu ngắn xen vào sẽ đổi nhịp và tạo điểm nhấn.',hint:'Thêm một câu rất ngắn (dưới 6 từ), tốt nhất là nhận xét của chính bạn.'},
+ voice:{title:'Giọng văn trung lập',reason:'Cả đoạn chỉ trình bày thông tin, không có quan điểm hay cảm nhận của người viết. Văn do AI viết hay an toàn và trung tính như vậy, còn người viết thật hay để lộ nhận định riêng.',hint:'Thêm một câu thể hiện bạn nghĩ gì hoặc thấy gì về vấn đề này.'},
+ exp:{title:'Thiếu chi tiết thật',reason:'Câu này nói chung chung, chưa có tên, con số hay tình huống cụ thể. Chi tiết rút từ trải nghiệm thật là thứ khó giả nhất của văn người viết.',hint:'Điền một ví dụ bạn đã gặp hoặc biết rõ (tên, con số, thời điểm) vào chỗ [ ].'}
+};
+function deep(t,taken){
+ var S=sents(t),vi=/[ăâđêôơưàáảãạèéẻẽẹìíỉĩịòóỏõọùúủũụỳýỷỹỵ]/i.test(t),c=[];
+ var PERS=/(?<![\p{L}])(?:tôi|mình|tớ|tao|em|anh|chị|nhé|nhỉ|ạ|à|ơi|haha|I|my|me|we|our)(?![\p{L}])|[!?]|…/iu;
+ var CONC=/\d|(?<=[^.!?…\n\s]\s)\p{Lu}\p{L}+|(?<![\p{L}])(?:hôm qua|năm ngoái|tuần trước|hồi đó|lần đó|lần đầu|hồi nhỏ|sáng nay|tối qua|yesterday|last (?:year|week|month|night)|years ago)(?![\p{L}])/u;
+ var P=S.map(function(x){return(t.slice(0,x.s).match(/\n/g)||[]).length});
+ function add(x,r,sg,pr){c.push({s:x.s,e:x.e,r:r,m:[x.t],sg:sg,pr:pr})}
+ S.forEach(function(x){if(x.w>=(ST.longOK?9999:Math.round(26*ST.prof.long))){var y=splitS(x.t);add(x,R.long,y?[{tag:'Tách thành hai câu',text:y}]:[],0)}});
+ var G={};S.forEach(function(x,i){(G[P[i]]=G[P[i]]||[]).push(i)});
+ Object.keys(G).forEach(function(k){
+  var g=G[k];if(g.length<2)return;
+  var free=g.filter(function(i){return S[i].w<Math.round(26*ST.prof.long)&&!taken.some(function(y){return S[i].s<y.e&&y.s<S[i].e})}),last=S[free.length?free[free.length-1]:g[g.length-1]];
+  if((g.map(function(i){return S[i].t}).join(' ').match(new RegExp(PERS.source,'giu'))||[]).length/g.length<0.25)add(last,R.voice,(vi?[' Mình thấy đây mới là điểm khó nhất.',' Tôi nghĩ vấn đề nằm ở chỗ này.']:[' I think this is the hard part.',' To me, that is what matters most.']).map(function(a){return{tag:'Thêm góc nhìn của bạn',text:last.t+a}}),2);
+  var no=g.filter(function(i){return!CONC.test(S[i].t)});
+  if(no.length&&(g.length-no.length)/g.length<0.5){var np=no.filter(function(i){return free.indexOf(i)>=0});var bi=(np.length?np:no).sort(function(a,b){return S[b].w-S[a].w})[0];add(S[bi],R.exp,[{tag:'Thêm ví dụ thật của bạn',text:S[bi].t+(vi?' Ví dụ: [điền một tình huống thật, có tên, con số hoặc thời điểm].':' For example: [add a real case with a name, number or date].')}],1)}
+  if(g.length>=3&&!g.some(function(i){return S[i].w<=6})&&free.length){var b=S[free[0]];add(b,R.uni,(vi?['Khó thật.','Không dễ như vậy.']:['Not easy.','That matters.']).map(function(a2){return{tag:'Thêm một câu ngắn',text:b.t+' '+a2}}),3)}
+ });
+ c.sort(function(a,b){return a.pr-b.pr||a.s-b.s});
+ var res=[];c.forEach(function(x){if(!taken.concat(res).some(function(y){return x.s<y.e&&y.s<x.e}))res.push(x)});return res;
+}
+function scan(t){var p=phr(t);return p.concat(deep(t,p)).sort(function(a,b){return a.s-b.s})}
+
+/* ---------- Bộ chấm nội bộ (số liệu tham khảo) ---------- */
+function detectOld(t){
+ var se=(t.match(/[^.!?\n]+[.!?]*/g)||[]).filter(function(s){return s.trim()}),n=se.length;
+ if(!t.trim()||n===0)return{score:0,top:''};
+ var cl=function(x){return Math.max(0,Math.min(1,x))};
+ var cv=function(a){var m=a.reduce(function(p,c){return p+c},0)/a.length;return m?Math.sqrt(a.reduce(function(p,c){return p+(c-m)*(c-m)},0)/a.length)/m:0};
+ var W=se.map(function(s){return s.trim().split(/\s+/).length}),i;
+ /* 1. Nhịp câu thiếu đột biến */
+ var f1=n<3?0.5:cl(1-cv(W)/0.6);
+ /* 2. Lạm dụng từ nối, cụm rập khuôn, lặp mở câu */
+ var f2=cl(phr(t).length/n/0.9);
+ /* 3. Cấu trúc quá đối xứng */
+ var paras=t.split(/\n+/).filter(function(s){return s.trim()}),f3;
+ if(paras.length>=2)f3=cl(1-cv(paras.map(function(p){return p.trim().split(/\s+/).length}))/0.5);
+ else{var eq=0;for(i=1;i<n;i++)if(Math.abs(W[i]-W[i-1])<=0.2*Math.max(W[i],W[i-1]))eq++;f3=n<2?0.5:eq/(n-1)}
+ /* 4. Giọng trung lập, thiếu sắc thái cá nhân */
+ var pers=(t.match(/(?<![\p{L}])(?:tôi|mình|tớ|tao|em|anh|chị|nhé|nhỉ|ạ|à|ơi|haha|I|my|me|we|our)(?![\p{L}])|[!?]|…|\.\.\./giu)||[]).length;
+ var f4=cl(1-pers/n/0.25);
+ /* 5. Thiếu chi tiết từ trải nghiệm thực */
+ var conc=(t.match(/\d+/g)||[]).length+(t.match(/(?<=[^.!?…\n\s]\s)\p{Lu}\p{L}+/gu)||[]).length+(t.match(/(?<![\p{L}])(?:hôm qua|hôm nay|năm ngoái|tuần trước|hồi đó|lần đó|lần đầu|hồi nhỏ|sáng nay|tối qua|yesterday|last (?:year|week|month|night)|when I|years ago)(?![\p{L}])/giu)||[]).length;
+ var f5=cl(1-conc/n/0.5);
+ /* 6. Quá hoàn hảo, chuẩn mực */
+ var imp=W.filter(function(w){return w<=4}).length+se.filter(function(s){return /^\s*(?:mà|nhưng|và|còn|but|and|so)(?![\p{L}])/iu.test(s)}).length+(t.match(/\.\.\.|…|—|\(|\s-\s|\p{L}['’]\p{L}/gu)||[]).length;
+ var f6=cl(1-imp/n/0.25);
+ var F=[[0.2,f1,'Thử xen vài câu rất ngắn vào giữa các câu dài.'],[0.25,f2,'Còn nhiều từ nối và cụm rập khuôn, hãy xem các chỗ được tô.'],[0.15,f3,'Các câu có độ dài khá giống nhau, thử đổi nhịp một chút.'],[0.15,f4,'Thử thêm góc nhìn của riêng bạn: một nhận xét, một câu hỏi, “tôi nghĩ”.'],[0.15,f5,'Thử thêm một chi tiết thật: tên, con số, thời điểm hoặc một lần bạn đã gặp.'],[0.1,f6,'Thử viết gần lời nói hơn: một câu lửng hoặc một ý thêm trong ngoặc.']];
+ var sc=0,best=0,top='';
+ F.forEach(function(x){var v=x[0]*x[1];sc+=v;if(v>best){best=v;top=x[2]}});
+ return{score:Math.round(sc*100),top:top};
+}
+
+function detect(t){
+ var se=(t.match(/[^.!?\n]+[.!?]*/g)||[]).filter(function(s){return s.trim()}),n=se.length;
+ if(!t.trim()||!n)return{score:0,top:'',hum:0,ai:[],hu:[]};
+ var cl=function(x){return Math.max(0,Math.min(1,x))},cnt=function(re){return(t.match(re)||[]).length};
+ var W=se.map(function(s){return s.trim().split(/\s+/).length}),avg=W.reduce(function(p,c){return p+c},0)/n;
+ var cv=Math.sqrt(W.reduce(function(p,c){return p+(c-avg)*(c-avg)},0)/n)/(avg||1);
+ var ph=phr(t),starts=ph.filter(function(x){return x.r.start}).length,frag=W.filter(function(w){return w<=4}).length,i;
+ var conj=se.filter(function(s){return /^\s*(?:mà|nhưng|và|còn|but|and|so)(?![\p{L}])/iu.test(s)}).length;
+ var low=se.filter(function(s){return /^\s*\p{Ll}/u.test(s)}).length;
+ var imp=frag+conj+low+cnt(/\.\.\.|…|\(|\s-\s|[ ]{2}|[!?]{2}/g);
+ var md=cnt(/^\s*(?:[-*•]|\d+[.)])\s/gm)+cnt(/\*\*|__|^#{1,4}\s/gm)+cnt(/—/g)+cnt(/\p{Extended_Pictographic}/gu);
+ var pm=cnt(/^\s*(?:dưới đây là|tất nhiên|chắc chắn rồi|xin chào|here is|here's|here’s|sure|certainly|of course)(?![\p{L}])/gimu)+cnt(/(?<![\p{L}])(?:as an ai|là một mô hình ngôn ngữ|mô hình ngôn ngữ lớn)(?![\p{L}])/giu)+cnt(/\[[^\]]{3,}\]|\[\d+\]/g);
+ var conc=cnt(/\d+/g)+cnt(/(?<=[^.!?…\n\s]\s)\p{Lu}\p{L}+/gu)+cnt(/(?<![\p{L}])(?:hôm qua|năm ngoái|tuần trước|hồi đó|lần đó|lần đầu|hồi nhỏ|sáng nay|tối qua|yesterday|last (?:year|week|month|night)|years ago)(?![\p{L}])/giu);
+ var fs=se.map(function(s){return(s.trim().match(/^\p{L}+/u)||[''])[0].toLowerCase()}),rep=0;
+ for(i=1;i<n;i++)if(fs[i]&&fs[i]===fs[i-1])rep++;
+ var pers=cnt(/(?<![\p{L}])(?:tôi|mình|tớ|tao|em|anh|chị|nhé|nhỉ|ạ|à|ơi|haha|I|my|me|we|our)(?![\p{L}])|[!?]|…/giu);
+ var col=cnt(/(?<![\p{L}])(?:nhé|nhỉ|ạ|à|ơi|thật sự|kiểu như|hơi|tụi|khá là|ừ|thôi|luôn|chứ|hả|đấy|vậy đó|kinda|gonna|really|pretty|yeah|honestly)(?![\p{L}])/giu);
+ var dr=cnt(/\.\.\.|…|\([^)]*\?\)|[ ]{2}|(?<![\p{L}])(?:à nhầm|ý là|tức là|hmm|ờ|ừm)(?![\p{L}])/giu)+low;
+ var f=[1-cl(imp/n/0.25),n<4?0:cl(1-cv/0.6),cl(md/3),cl((avg-18)/20),cl(ph.length/n/0.5),cl(pm),0.75*(1-cl(conc/n/0.5))+0.25*cl(rep/n*2)];
+ var Wt=[10,15,10,15,20,10,20],pc=f.map(function(v,k){return Math.round(Wt[k]*v)});
+ var N=['Độ sạch văn bản cao','Nội dung đồng đều bất thường','Dấu hiệu soạn thảo của AI','Văn phong tổng quát và trau chuốt','Văn phong AI','Dấu vết copy/prompt','Lặp khuôn và thiếu thông tin cụ thể'];
+ var D=[['Có vài dấu hiệu gõ tay tự nhiên như câu ngắn, ngoặc hoặc dấu ba chấm.','Văn bản được làm sạch khá kỹ, ít dấu hiệu gõ tay tự nhiên.'],[n<4?'Chưa đủ dữ liệu để xác định các câu có độ dài đều nhau.':'Độ dài câu thay đổi tự nhiên.','Các câu có độ dài khá đều nhau.'],['Không thấy dấu hiệu định dạng máy móc rõ ràng.','Có dấu hiệu định dạng máy móc (gạch đầu dòng, ký hiệu, gạch ngang dài).'],['Độ dài câu ở mức vừa phải, chưa thấy trau chuốt thái quá.','Văn bản có xu hướng khái quát, tròn ý và trau chuốt theo kiểu an toàn.'],['Chưa thấy nhiều cụm chuyển ý và cụm rập khuôn.',starts+'/'+n+' câu ('+Math.round(starts/n*100)+'%) mở đầu bằng cụm chuyển ý thường gặp trong văn bản AI.'],['Chưa thấy dấu vết copy/prompt rõ ràng.','Còn dấu vết trả lời mẫu hoặc chỗ trống [ ] chưa điền.'],['Có chi tiết cụ thể, ít lặp khuôn câu.','Thiếu thông tin cụ thể hoặc lặp khuôn câu.']];
+ var T=[imp?imp+' dấu hiệu chưa chuẩn mực':'ít lỗi phổ biến',n<4?'Chưa đủ câu để đo độ đều':'độ lệch độ dài câu '+Math.round(cv*100)+'%',md?'phát hiện '+md+' dấu hiệu định dạng':'','câu dài trung bình '+avg.toFixed(1)+' từ',ph.slice(0,3).map(function(x){return x.r.title}).join(', '),pm?'còn '+pm+' dấu vết':'',conc+' chi tiết cụ thể (số, tên, mốc thời gian)'];
+ var NU=['Thử viết gần lời nói hơn: một câu lửng hoặc ý thêm trong ngoặc.','Thử xen vài câu rất ngắn vào giữa các câu dài.','Bỏ các ký hiệu định dạng, gạch đầu dòng và dấu gạch ngang dài.','Thử tách bớt các câu dài thành câu ngắn hơn.','Còn nhiều từ nối và cụm rập khuôn, hãy xem các chỗ được tô.','Xoá câu mở đầu kiểu trả lời mẫu và điền các chỗ [ ] còn trống.','Thử thêm một chi tiết thật: tên, con số, thời điểm hoặc một lần bạn đã gặp.'];
+ var ai=N.map(function(nm,k){return{name:nm,desc:D[k][f[k]>0.5?1:0],tag:T[k],pct:pc[k]}});
+ var hf=[cl(pers/n/0.25),0.6*cl(cv/0.6)+0.4*cl((frag+conj)/n/0.25),cl(col/n/0.3),cl(dr/n/0.15)];
+ var HN=[['Giọng kể cá nhân','Chưa thấy nhiều dấu hiệu giọng kể cá nhân.','Có giọng kể cá nhân (ngôi thứ nhất, cảm nhận riêng).'],['Văn phong tự nhiên','Nhịp câu chưa đủ biến đổi tự nhiên.','Nhịp câu thay đổi tự nhiên, có câu ngắn xen kẽ.'],['Ngôn ngữ khẩu ngữ đời thường','Chưa thấy nhiều từ ngữ khẩu ngữ đời thường trong văn bản.','Có từ ngữ khẩu ngữ đời thường.'],['Dấu vết bản nháp','Bố cục và thao tác soạn thảo khá sạch.','Có dấu vết của bản nháp viết tay.']];
+ var hu=HN.map(function(h,k){return{name:h[0],desc:h[hf[k]>0.5?2:1],tag:'',pct:Math.round(25*hf[k])}});
+ var sum=function(a){return Math.min(100,a.reduce(function(p,c){return p+c.pct},0))},mx=0;
+ pc.forEach(function(v,k){if(v>pc[mx])mx=k});
+ return{score:sum(ai),hum:sum(hu),top:NU[mx],ai:ai,hu:hu};
+}
+function renderSigs(d){
+ function col(title,arr,c){return'<div class="panel"><h2>'+title+'</h2>'+arr.map(function(x){return'<div class="sg-row"><div><b>'+x.name+'</b><span class="d">'+x.desc+'</span>'+(x.tag?'<em>'+esc(x.tag)+'</em>':'')+'</div><span class="pc '+c+'">'+(c==='a'?'+':'')+x.pct+'%</span></div>'}).join('')+'</div>'}
+ $('#sigs').innerHTML=d.ai.length?col('Tín hiệu giống AI',d.ai,'a')+col('Tín hiệu giống người viết',d.hu,'h'):'';
+}
+/* ---------- Trạng thái ---------- */
+var VI='Trong bối cảnh hiện nay, công nghệ đóng vai trò quan trọng trong cuộc sống của chúng ta. Hơn nữa, trí tuệ nhân tạo mang lại nhiều lợi ích cho giáo dục. Bên cạnh đó, nó giúp học sinh học tập một cách hiệu quả. Không chỉ tiết kiệm thời gian mà còn nâng cao chất lượng bài học. Tóm lại, việc ứng dụng công nghệ là xu hướng tất yếu.';
+var EN='In today’s fast-paced world, technology plays a crucial role in education. Furthermore, AI tools delve into data to help students learn. Moreover, they leverage feedback to personalize every lesson. In conclusion, technology is a testament to human progress.';
+var parts=[],mode='edit',open=null;
+var ta=$('#ta'),doc=$('#doc'),card=$('#card'),bar=$('#bar');
+ta.value=VI;
+
+function build(t){
+ var ms=scan(t),pos=0,p=[];
+ ms.forEach(function(x){if(x.s>pos)p.push({k:'t',s:t.slice(pos,x.s)});p.push({k:'f',s:t.slice(x.s,x.e),r:x.r,sg:x.sg||suggs(x.r,x.m),st:'open'});pos=x.e});
+ if(pos<t.length)p.push({k:'t',s:t.slice(pos)});return p;
+}
+function eff(){return parts.map(function(p){return p.k==='p'?p.nw:(p.s||'')}).join('')}
+function pj(p){return p.nw&&p.nw.indexOf(p.old)===0?p.nw:p.old+(p.nw?' '+p.nw:'')}
+function plain(){return parts.map(function(p){return p.k==='p'?pj(p):p.s}).join('')}
+function lang(t){return t.trim()?detectLang(t).name:'Chưa có văn bản'}
+
+/* ---------- Hiển thị ---------- */
+function renderBar(){
+ var h='<span class="chip">'+lang(mode==='edit'?ta.value:plain())+'</span>';
+ if(mode==='edit')h+='<button data-a="vi">Mẫu tiếng Việt</button><button data-a="en">English sample</button><span class="sp"></span><button class="pri" data-a="check">Kiểm tra văn phong</button>';
+ else h+='<span class="sp"></span><button data-a="copy">Chép văn bản</button><button data-a="back">Sửa tiếp</button>';
+ bar.innerHTML=h;
+}
+function renderScore(){schedule()}
+function renderScoreOld(){
+ var t=mode==='edit'?ta.value:eff(),d=detect(t),g=$('#g');
+ $('#score').innerHTML=d.score+'<span>%</span>';
+ g.style.width=Math.min(100,d.score)+'%';g.style.background=d.score<20?'var(--ok)':d.score<50?'var(--warn)':'var(--bad)';
+ $('#mini').innerHTML='<p style="margin:0;font-size:13px">'+(!t.trim()?'':d.score<20?'Đã dưới mục tiêu 20% theo số liệu tham khảo.':d.top)+'</p><div class="hum">Giống người viết (tham khảo)<div class="big">'+d.hum+'<span>%</span></div></div>';renderSigs(d);
+}
+function renderDoc(){
+ doc.innerHTML=parts.map(function(p,i){
+  if(p.k==='t')return esc(p.s);
+  if(p.k==='f')return'<mark class="f '+p.st+'" data-i="'+i+'">'+esc(p.s)+'</mark>';
+  var ap=p.nw&&p.nw.indexOf(p.old)===0;return'<span class="pair" data-i="'+i+'">'+(ap?esc(p.old)+'<ins>'+esc(p.nw.slice(p.old.length).trim())+'</ins>':'<del>'+esc(p.old)+'</del><ins>'+(p.nw?esc(p.nw):'(bỏ cụm này)')+'</ins>')+'</span>';
+ }).join('');
+ var n=parts.filter(function(p){return p.k==='f'&&p.st==='open'||p.k==='p'}).length,l=$('#left');
+ l.hidden=false;l.textContent=n?('Còn '+n+' chỗ cần xem. Bấm vào chỗ được tô để xem lý do và gợi ý.'):'Đã xem hết vòng này. Bấm “Sửa tiếp” rồi “Kiểm tra” lại để quét vòng mới, vì khi sửa xong có thể lộ thêm chỗ khác.';
+ showCard();
+}
+function showCard(){
+ if(open===null||!parts[open]){card.style.display='none';return}
+ var p=parts[open],h='';
+ if(p.k==='f'){
+  h='<h3>'+p.r.title+'</h3><div class="lbl">Vì sao chưa tự nhiên</div><p>'+p.r.reason+'</p>';
+  if(p.sg.length){h+='<div class="lbl">Gợi ý: chọn để thêm vào văn bản</div>'+p.sg.map(function(s,j){return'<button class="sg" data-a="apply" data-j="'+j+'">'+(s.tag?'<small>'+s.tag+'</small>':'')+esc(s.text)+'</button>'}).join('')}
+  if(p.r.hint)h+='<div class="hint">'+p.r.hint+'</div>';
+  h+='<div class="lbl">Hoặc tự viết lại theo ý bạn</div><textarea id="own" rows="2" spellcheck="false">'+esc(p.s)+'</textarea><div class="row"><button class="pri" data-a="own">Dùng bản của tôi</button></div>';
+  h+='<div class="row"><button data-a="ignore">'+(p.st==='ignored'?'Đã giữ nguyên, bấm để xem lại':'Giữ nguyên chỗ này')+'</button><button data-a="close">Đóng</button></div>';
+ }else{
+  h='<h3>Bạn muốn xử lý câu cũ thế nào?</h3><p>Gợi ý mới đã được thêm ngay sau đoạn cũ. Việc xoá hay giữ đoạn cũ là do bạn quyết định.</p><div class="lbl">Chỉnh lại bản mới theo ý bạn</div><textarea id="own" rows="2" spellcheck="false">'+esc(p.nw)+'</textarea><div class="row"><button data-a="own">Cập nhật bản mới</button></div><div class="row"><button class="pri" data-a="delold">Xoá câu cũ</button><button data-a="both">Giữ cả hai</button><button data-a="undo">Hoàn tác</button></div>';
+ }
+ card.innerHTML=h;card.style.display='block';
+ var el=doc.querySelector('[data-i="'+open+'"]'),w=$('#wrap').getBoundingClientRect(),r=el.getBoundingClientRect();
+ card.style.top=(r.bottom-w.top+8)+'px';
+ card.style.left=Math.max(0,Math.min(r.left-w.left,w.width-card.offsetWidth-4))+'px';
+}
+function setMode(m){mode=m;ta.hidden=m!=='edit';doc.hidden=m==='edit';$('#left').hidden=m==='edit';open=null;card.style.display='none';renderBar();renderScore()}
+
+/* ---------- Hành động ---------- */
+bar.addEventListener('click',function(e){
+ var a=e.target.getAttribute&&e.target.getAttribute('data-a');if(!a)return;
+ if(a==='vi'){ta.value=VI}
+ else if(a==='en'){ta.value=EN}
+ else if(a==='check'){if(!ST.ok){openSetup();$('#setup').scrollIntoView&&$('#setup').scrollIntoView({block:'center'});return}parts=build(ta.value);setMode('review');renderDoc();return}
+ else if(a==='back'){ta.value=plain();setMode('edit');return}
+ else if(a==='copy'){try{navigator.clipboard.writeText(plain()).then(function(){e.target.textContent='Đã chép'},function(){e.target.textContent='Không chép được'})}catch(x){e.target.textContent='Không chép được'}return}
+ renderBar();renderScore();
+});
+ta.addEventListener('input',function(){renderBar();renderScore()});
+$('#wrap').addEventListener('click',function(e){
+ var a=e.target.getAttribute&&e.target.getAttribute('data-a'),j=e.target.closest('[data-j]');
+ if(j)a='apply';
+ var i=open,p=i!==null?parts[i]:null;
+ if(a==='apply'&&p){var s=p.sg[+j.getAttribute('data-j')];parts[i]={k:'p',old:p.s,nw:s.text,r:p.r,sg:p.sg}}
+ else if(a==='own'&&p){var v=$('#own').value;if(p.k==='f')parts[i]={k:'p',old:p.s,nw:v,r:p.r,sg:p.sg};else p.nw=v}
+ else if(a==='ignore'&&p){p.st=p.st==='ignored'?'open':'ignored';if(p.st==='ignored')open=null}
+ else if(a==='close'){open=null}
+ else if(a==='delold'&&p){parts[i]={k:'t',s:p.nw}; open=null}
+ else if(a==='both'&&p){parts[i]={k:'t',s:pj(p)}; open=null}
+ else if(a==='undo'&&p){parts[i]={k:'f',s:p.old,r:p.r,sg:p.sg,st:'open'}}
+ else{
+  var t=e.target.closest('[data-i]');
+  if(t&&mode==='review'){open=+t.getAttribute('data-i')}
+  else if(!e.target.closest('#card')){open=null}
+  else return;
+ }
+ renderDoc();renderScore();
+});
+window.addEventListener('resize',function(){if(mode==='review')showCard()});
+
+/* ---------- Phân tích 4 tầng (chạy ngầm) ---------- */
+var VIC=/[ăâđêôơưáàảãạấầẩẫậắằẳẵặéèẻẽẹếềểễệíìỉĩịóòỏõọốồổỗộớờởỡợúùủũụứừửữựýỳỷỹỵ]/gi;
+function RX(l){return new RegExp('(?<![\\p{L}])(?:'+l+')(?![\\p{L}])','giu')}
+var LP={
+ vi:{gen:RX('đáng kể|toàn diện|hiệu quả|tối ưu|quan trọng|đa dạng|phong phú|bền vững|tiên tiến|then chốt|không ngừng|ngày càng'),cau:RX('vì|bởi vì|do đó|do|nên|vì vậy|cho nên|dẫn đến|khiến|nhờ'),con:RX('nhưng|tuy nhiên|tuy|mặc dù|trái lại|ngược lại|mặt khác|song'),st:RX('tôi nghĩ|tôi cho rằng|theo tôi|theo mình|mình thấy|tôi thấy|mình nghĩ|có lẽ|hình như|chưa chắc|tôi muốn|mình muốn|tôi cần|mình cần|tôi đề xuất|mình đề xuất|hãy|mong muốn|quan trọng là|cái quan trọng'),pers:RX('tôi|mình|tớ|tao|em|anh|chị'),col:RX('nhé|nhỉ|ạ|à|ơi|thật sự|kiểu như|hơi|tụi|khá là|ừ|thôi|luôn|chứ|hả|đấy|vậy đó'),over:RX('luôn|mọi|tất cả|không bao giờ|chắc chắn|hoàn toàn'),res:RX('dưới đây là|hy vọng (?:thông tin|bài viết) này|nếu bạn cần|hãy cho (?:tôi|mình) biết|tất nhiên|chắc chắn rồi'),self:RX('là một mô hình ngôn ngữ|mô hình ngôn ngữ lớn|tôi là (?:một )?(?:trợ lý )?ai|không có khả năng truy cập|dữ liệu huấn luyện'),close:/^\s*(?:tóm lại|nhìn chung|có thể thấy|kết luận)(?![\p{L}])/iu},
+ en:{gen:RX('significant|comprehensive|effective|optimal|robust|crucial|vital|seamless|holistic|multifaceted|pivotal|ever-evolving'),cau:RX('because|since|therefore|thus|hence|due to|as a result'),con:RX('but|however|although|though|yet|whereas|on the other hand|nevertheless'),st:RX('i think|i believe|in my view|to me|i feel|perhaps|maybe|not sure'),pers:RX('i|my|me|we|our|mine'),col:RX('kinda|gonna|really|pretty|yeah|honestly|stuff|sort of|a bit|totally|guess'),over:RX('always|never|everyone|everything|all|completely|certainly'),res:RX('here is|here’s|here\'s|i hope this helps|let me know if|feel free to'),self:RX('as an ai|language model|i do not have access|knowledge cutoff|i cannot browse'),close:/^\s*(?:in conclusion|in summary|to sum up|overall|ultimately)(?![\p{L}])/iu}
+};
+var cl2=function(x){return Math.max(0,Math.min(1,x))};
+function mean(a){return a.length?a.reduce(function(p,c){return p+c},0)/a.length:0}
+function sdev(a){var m=mean(a);return Math.sqrt(mean(a.map(function(x){return(x-m)*(x-m)})))}
+function snip(s){return s.length>70?s.slice(0,67)+'…':s}
+function sentP(s,L){
+ var p=0.12;
+ if(phr(s).length)p+=0.33;
+ if((s.match(L.gen)||[]).length)p+=0.14;
+ if(!/\d|(?<=[^.!?…\n\s]\s)\p{Lu}\p{L}+/u.test(s))p+=0.14;
+ if(!(s.match(L.pers)||[]).length&&!/[!?…]/.test(s))p+=0.1;
+ if(s.split(/\s+/).length>=24)p+=0.1;
+ if(L.close.test(s))p+=0.15;
+ return cl2(p);
+}
+function analyze(t){
+ var se=sents(t),n=se.length,CJ=/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/gu,cjk=(t.match(CJ)||[]).length>t.length*0.2,tok=cjk?(t.match(CJ)||[]):(t.toLowerCase().match(/\p{L}+/gu)||[]),words=cjk?Math.ceil(tok.length/1.6):tok.length,i,j;
+ if(!t.trim()||!n)return null;
+ var LG=detectLang(t),lang=LG.code,L=LP[LG.pack];
+ var cnt=function(re){return(t.match(re)||[]).length},dens=function(x){return x/n};
+ var W=se.map(function(x){return x.w}),avg=mean(W),cv=sdev(W)/(avg||1);
+ var cm=se.map(function(x){return(x.t.match(/,/g)||[]).length}),cvc=sdev(cm)/(mean(cm)||1);
+ var ph=phr(t),starts=ph.filter(function(x){return x.r.start}).length;
+ var gen=cnt(L.gen),cau=cnt(L.cau),con=cnt(L.con),st=cnt(L.st),pers=cnt(L.pers)+cnt(/[!?]|…/g),col=cnt(L.col)+cnt(/:\)+|:-\)|:\(|=\)+|;\)|hihi|haha|:D/gi),over=cnt(L.over);
+ var PN=/(?<=[^.!?…\n\s]\s)\p{Lu}\p{L}+/gu,CONC=/\d+|(?<![\p{L}])(?:hôm qua|năm ngoái|tuần trước|hồi đó|lần đó|lần đầu|hồi nhỏ|sáng nay|tối qua|yesterday|last (?:year|week|month|night)|years ago)(?![\p{L}])/giu;
+ var conc=cnt(CONC)+cnt(PN),spec=1-cl2(dens(conc)/0.5);
+ var fs=se.map(function(x){return(x.t.match(/^\p{L}+/u)||[''])[0].toLowerCase()}),rep=0;
+ for(i=1;i<n;i++)if(fs[i]&&fs[i]===fs[i-1])rep++;
+ var trip=cnt(/\p{L}+(?: \p{L}+)?, \p{L}+(?: \p{L}+)?,? (?:và|and|hoặc|or) \p{L}+/gu)+cnt(/không chỉ [^.!?\n]{3,60}? mà còn|not only [^.!?\n]{3,60}? but also/giu);
+ var bg={},nb=0,rb=0;
+ for(i=0;i<tok.length-1;i++){var k=tok[i]+' '+tok[i+1];bg[k]=(bg[k]||0)+1;nb++}
+ Object.keys(bg).forEach(function(k2){if(bg[k2]>1)rb+=bg[k2]});
+ var rep2=nb?rb/nb:0;
+ var cws=se.map(function(x){var o={};(x.t.toLowerCase().match(/\p{L}{4,}/gu)||[]).forEach(function(w){o[w]=1});return o}),pairs=[],sims=[];
+ for(i=0;i<n;i++){var mx=0,mj=-1;
+  for(j=0;j<n;j++){if(i===j)continue;var a=Object.keys(cws[i]),b=Object.keys(cws[j]),it=a.filter(function(w){return cws[j][w]}).length,un=a.length+b.length-it,s=un?it/un:0;if(s>mx){mx=s;mj=j}}
+  sims.push(mx);pairs.push([mx,i,mj])}
+ var sim=mean(sims);
+ var md=0.3*cnt(/^\s*(?:[-*•]|\d+[.)])\s/gm)+cnt(/\*\*|__|^#{1,4}\s/gm)+cnt(/—/g)+cnt(/\p{Extended_Pictographic}/gu);
+ var res=cnt(L.res)+cnt(/\[[^\]]{3,}\]|\[\d+\]/g),self=cnt(L.self),close=L.close.test(se[n-1].t)?1:0;
+ var frag=W.filter(function(w){return w<=4}).length,q=cnt(/\?/g);
+ var dr=cnt(/\.\.\.|…|[ ]{2}|(?<![\p{L}])(?:à nhầm|ý là|tức là|hmm|ờ|ừm)(?![\p{L}])/giu);
+ /* [tầng, tên, trọng số, mức giống AI 0..1, gợi ý] */
+ var AI=[
+  [1,'lặp từ',0.6,words<150?0:cl2((rep2-0.03)/0.08),''],
+  [1,'cụm sáo rỗng',2,cl2(dens(ph.length)/0.4),'Còn nhiều từ nối và cụm rập khuôn, hãy xem các chỗ được tô.'],
+  [1,'từ chung chung',1.5,cl2(dens(gen)/0.5),'Thay các từ chung chung (“hiệu quả”, “toàn diện”…) bằng điều cụ thể bạn muốn nói.'],
+  [1,'mở câu lặp',2,cl2((rep+starts)/n/0.4),'Đổi cách mở đầu câu, bớt từ chuyển ý.'],
+  [1,'cấu trúc song song',1,cl2(dens(trip)/0.4),'Tránh liệt kê ba ý hoặc cấu trúc “không chỉ… mà còn” lặp lại.'],
+  [1,'câu phức đều',0.5,n<4?0:(mean(cm)<0.3?0.3:1-cl2(cvc/0.8)),'Xen vài câu rất ngắn hoặc một câu không có dấu phẩy.'],
+  [2,'thiếu cụ thể',2.5,n<3?0:1-cl2(dens(conc)/0.5),'Thử thêm một chi tiết thật: tên, con số, thời điểm hoặc một lần bạn đã gặp.'],
+  [2,'lặp ý',1,cl2((sim-0.1)/0.18),'Một số câu nói gần như cùng một ý, hãy gộp lại hoặc thay bằng ý mới.'],
+  [2,'lập luận nông',0.8,1-cl2(dens(cau+con)/0.3),'Thêm lý do hoặc một mặt trái của vấn đề.'],
+  [2,'một chiều, trung lập',2.5,n<5?0:1-cl2((con+st+0.5*pers)/n/0.2),'Thử nêu quan điểm riêng hoặc một giới hạn của ý bạn đưa ra.'],
+  [2,'khái quát',0.7,cl2(dens(over)/0.3),'Bớt các từ tuyệt đối (“luôn”, “tất cả”) nếu chưa có căn cứ.'],
+  [2,'giọng an toàn',2,n<4?0:1-cl2((pers+col+st)/n/0.2),'Thử thêm giọng của bạn: một nhận xét, câu hỏi hoặc cách nói đời thường.'],
+  [3,'dấu vết prompt',3,cl2(res),'Xoá câu mở đầu kiểu trả lời mẫu và điền các chỗ [ ] còn trống.'],
+  [3,'tự nhắc AI',3,cl2(self),'Xoá các câu nhắc đến “mô hình ngôn ngữ” hoặc giới hạn của AI.'],
+  [3,'định dạng máy',2,cl2(md/3),'Bỏ ký hiệu định dạng, gạch đầu dòng và dấu gạch ngang dài.'],
+  [3,'kết theo khuôn',1.5,close,'Kết bằng nhận định cụ thể của bạn thay vì câu tổng kết quen thuộc.'],
+  [4,'nhịp đều',1,n<4?0:1-cl2(cv/0.6),'Thử xen vài câu rất ngắn vào giữa các câu dài.']
+ ];
+ var MM={'cụm sáo rỗng':'phrase','mở câu lặp':'phrase','kết theo khuôn':'phrase','từ chung chung':'generic','khái quát':'generic','thiếu cụ thể':'spec','một chiều, trung lập':'stance','giọng an toàn':'stance','nhịp đều':'rhythm','câu phức đều':'rhythm','định dạng máy':'md'};
+ if(LG.pack==='gen')AI.forEach(function(x){if(['giọng an toàn','một chiều, trung lập','lập luận nông','từ chung chung','cụm sáo rỗng','khái quát'].indexOf(x[1])>=0)x[3]=0.3});
+ AI.forEach(function(x){var m=MM[x[1]];if(m)x[2]*=ST.prof[m]});
+ var sw=0,sv=0,tw={},tv={},tip='',tb=0;
+ AI.forEach(function(x){var c=x[2]*x[3];sw+=x[2];sv+=c;tw[x[0]]=(tw[x[0]]||0)+x[2];tv[x[0]]=(tv[x[0]]||0)+c;if(c>tb){tb=c;tip=x[4]}});
+ var ai=Math.round(100*sv/sw),tiersAI=[1,2,3,4].filter(function(k){return tw[k]&&tv[k]/tw[k]>0.5}).length;
+ var HM=[[3,n<3?0:spec],[3.5,cl2(dens(pers+st)/0.25)*(0.4+0.6*spec)],[1.2,n<4?0:cl2(cv/0.6)],[1.8,cl2(dens(col)/0.3)],[1.5,cl2(dens(cau+con)/0.3)],[0.6,cl2(dens(dr)/0.15)],[1,cl2(dens(frag+q)/0.2)]];
+ var hw=0,hv=0;HM.forEach(function(x){hw+=x[0];hv+=x[0]*x[1]});var hum=Math.round(100*hv/hw);
+ var sp=se.map(function(x){return sentP(x.t,L)}),pg={};
+ se.forEach(function(x,k){var id=(t.slice(0,x.s).match(/\n/g)||[]).length;(pg[id]=pg[id]||[]).push(k)});
+ var ps=Object.keys(pg).map(function(k){return{ix:pg[k],p:mean(pg[k].map(function(m){return sp[m]}))}}).filter(function(x){return x.ix.length>=3});
+ var pv=ps.map(function(x){return x.p}),inc=ps.length>=2&&Math.max.apply(0,pv)-Math.min.apply(0,pv)>0.3;
+ var lv=words<40||n<3?0:words<120?1:words<300?2:3;if(LG.pack==='gen'&&lv>0)lv=Math.max(1,lv-1);
+ var vd=lv===0?'unk':ai<20?'human':(ai>=45&&hum<40&&tiersAI>=2&&!inc)?'gen':'asst';
+ var ev=[],E=function(side,title,detail,conf,qt){ev.push({side:side,title:title,detail:detail,conf:conf,q:qt||''})};
+ if(LG.pack==='gen')E('note','Ngôn ngữ chưa có bộ luật riêng','Đã nhận diện '+LG.name+'. Hệ thống chỉ dùng các chỉ số trung tính (nhịp câu, lặp từ, chi tiết cụ thể) nên độ tin cậy giảm.','—');
+ var smp=function(re,k){return(t.match(re)||[]).slice(0,k||3).join('; ')};
+ if(res)E('ai','Dấu vết trả lời mẫu hoặc chỗ trống chưa điền','Có cụm kiểu chatbot hoặc ký hiệu [ ]. Đây là dấu hiệu rõ nhất, nhưng cũng có thể do người dùng sao chép nguyên văn.','Cao',smp(L.res)||smp(/\[[^\]]{3,}\]/g));
+ if(self)E('ai','Nhắc đến AI hoặc giới hạn của mô hình','Văn bản tự nhắc đến mô hình ngôn ngữ.','Cao',smp(L.self));
+ if(ph.length)E('ai','Từ nối và cụm rập khuôn ('+ph.length+' chỗ)','Từng cụm riêng lẻ không chứng minh điều gì vì người viết thật cũng dùng. Chỉ đáng chú ý khi lặp dày.',ph.length>=Math.max(3,n*0.4)?'Trung bình':'Thấp',ph.slice(0,3).map(function(x){return snip(t.slice(x.s,x.e))}).join(' | '));
+ if(n>=4&&cv<0.35)E('ai','Nhịp câu khá đều','Độ lệch độ dài câu chỉ khoảng '+Math.round(cv*100)+'%.',n>=8?'Trung bình':'Thấp');
+ if(n>=3&&dens(conc)<0.25)E('ai','Ít thông tin cụ thể','Chỉ có '+conc+' chi tiết cụ thể (số, tên riêng, mốc thời gian) trong '+n+' câu. Văn tổng quan hoặc học thuật cũng có thể như vậy.','Trung bình');
+ pairs.sort(function(x,y){return y[0]-x[0]});
+ if(n>=4&&pairs[0][0]>0.35)E('ai','Hai câu lặp ý','Hai câu dùng nhiều từ nội dung giống nhau (khoảng '+Math.round(pairs[0][0]*100)+'%).','Thấp',snip(se[pairs[0][1]].t)+' | '+snip(se[pairs[0][2]].t));
+ if(inc)E('ai','Phong cách không đồng đều giữa các đoạn','Một số đoạn có dấu hiệu khuôn mẫu rõ hơn đoạn khác. Có thể do ghép nội dung từ nhiều nguồn hoặc có AI hỗ trợ một phần.','Thấp');
+ if(close)E('ai','Kết đoạn theo khuôn','Câu cuối mở bằng cụm tổng kết quen thuộc.','Thấp',snip(se[n-1].t));
+ if(conc>=3)E('human','Có chi tiết cụ thể','Có '+conc+' chi tiết (ví dụ: '+(smp(PN,3)||smp(CONC,3))+'). AI cũng có thể bịa chi tiết nên đây chỉ là dấu hiệu hỗ trợ.','Thấp');
+ if(n>=4&&cv>=0.5)E('human','Nhịp câu biến đổi','Độ dài câu thay đổi khá nhiều (khoảng '+Math.round(cv*100)+'%).','Thấp');
+ if(pers+st>0&&spec>0.4)E('human','Giọng riêng đi kèm chi tiết','Có cách nói ngôi thứ nhất hoặc nhận định riêng, đi cùng chi tiết cụ thể.','Thấp');
+ if(col)E('human','Có khẩu ngữ','Có từ ngữ đời thường. AI cũng có thể bắt chước nên chỉ dùng để tham khảo.','Thấp');
+ if(cau+con>=Math.max(2,n*0.3))E('human','Lập luận có lý do và đối lập','Có từ chỉ nguyên nhân hoặc đối lập nối các ý.','Thấp');
+ var unv=t.match(/\d+(?:[.,]\d+)?\s?%|(?:theo|nghiên cứu|báo cáo)[^.!?\n]{0,30}(?:cho thấy|chỉ ra)|according to|studies (?:show|suggest)/giu)||[];
+ if(unv.length)E('note','Thông tin cần kiểm chứng ('+unv.length+')','Số liệu hoặc nghiên cứu được nhắc đến chưa kèm nguồn: '+unv.slice(0,3).join('; ')+'. Thiếu nguồn hoặc sai thông tin không phải bằng chứng trực tiếp của AI.','—');
+ var fp=[['Số từ',words,cl2(words/500)],['Số câu',n,cl2(n/30)],['Độ dài câu trung bình',avg.toFixed(1)+' từ',cl2(avg/40)],['Độ biến thiên nhịp câu',Math.round(cv*100)+'%',cl2(cv/0.8)],['Đa dạng từ vựng',Math.round(100*new Set(tok).size/(words||1))+'%',cl2(new Set(tok).size/(words||1))],['Dấu phẩy mỗi câu',mean(cm).toFixed(1),cl2(mean(cm)/4)],['Chi tiết cụ thể mỗi câu',dens(conc).toFixed(2),cl2(dens(conc))],['Cụm rập khuôn mỗi câu',dens(ph.length).toFixed(2),cl2(dens(ph.length))],['Dấu ấn cá nhân mỗi câu',dens(pers+st).toFixed(2),cl2(dens(pers+st))]];
+ return{ind:AI.map(function(x){return[x[1],+(x[2]*x[3]).toFixed(2),+x[3].toFixed(2)]}),t:t,se:se,sp:sp,ps:ps,pairs:pairs,inc:inc,ai:ai,hum:hum,vd:vd,lv:lv,words:words,n:n,lang:lang,LG:LG,tip:tip,tiersAI:tiersAI,fp:fp,ev:ev};
+}
+/* ---------- Hiển thị kết quả hoặc giao diện chờ ---------- */
+var RES=null,tmr,Prov={paste:0,typed:0};
+var VD={human:['ok','Human-written','Có nhiều đặc điểm phù hợp với văn bản do con người viết.'],asst:['warn','AI-assisted','Có thể do người viết nhưng có dấu hiệu được AI hỗ trợ chỉnh sửa, diễn đạt hoặc mở rộng.'],gen:['bad','AI-generated','Có dấu hiệu được tạo chủ yếu bằng AI.'],unk:['unk','Chưa đủ dữ liệu','Chưa đủ dữ liệu để đưa ra nhận định đáng tin cậy.']};
+function busy(b){
+ $('#side').classList.toggle('busy',b);
+ if(b){$('#verdict').innerHTML='<div class="wait">Đang phân tích…</div>';$('#fx').innerHTML='<div class="wait wide">Đang phân tích…</div><div class="sk"></div><div class="sk"></div>'}
+}
+function schedule(){if(!ST.ok){$('#side').classList.remove('busy');$('#verdict').innerHTML='<div class="vd unk"><b>Chưa bắt đầu</b><span>Chọn kiểu văn phong ở phần “Trước khi phân tích”, rồi bấm “Bắt đầu phân tích”.</span></div>';$('#mini').innerHTML='';$('#fx').innerHTML='<p class="sub">Hãy hoàn tất thiết lập ở tab Kiểm tra văn phong để xem báo cáo.</p>';return}busy(true);clearTimeout(tmr);tmr=setTimeout(function(){RES=analyze(mode==='edit'?ta.value:eff());busy(false);showRes()},420)}
+function showRes(){
+ var r=RES,g=$('#g'),gh=$('#gh');
+ if(!r){$('#score').innerHTML='0<span>%</span>';$('#hscore').innerHTML='0<span>%</span>';g.style.width='0';gh.style.width='0';$('#verdict').innerHTML='';$('#mini').innerHTML='';$('#fx').innerHTML='<p class="sub">Nhập văn bản để xem báo cáo dấu vết.</p>';return}
+ $('#score').innerHTML=r.ai+'<span>%</span>';$('#hscore').innerHTML=r.hum+'<span>%</span>';
+ g.style.width=r.ai+'%';g.style.background=r.ai<20?'var(--ok)':r.ai<50?'var(--warn)':'var(--bad)';
+ gh.style.width=r.hum+'%';gh.style.background='var(--accent)';
+ var V=VD[r.vd];
+ $('#verdict').innerHTML='<div class="vd '+V[0]+'"><b>'+V[1]+'</b><span>'+V[2]+'</span><small>'+r.LG.name+' · Độ tin cậy: '+['không đủ','thấp','trung bình','cao'][r.lv]+' ('+r.words+' từ)</small></div>';
+ $('#mini').innerHTML='<p style="margin:0;font-size:13px">'+(r.vd==='unk'?'Hãy viết thêm để có kết quả đáng tin cậy hơn.':r.ai<20?'Đã dưới mục tiêu 20% theo số liệu tham khảo.':r.tip)+'</p>';
+ renderFx(r);
+}
+function evRow(x){return'<div class="sg-row"><div><b>'+x.title+'</b><span class="d">'+x.detail+'</span>'+(x.q?'<em>'+esc(x.q)+'</em>':'')+'</div><span class="pc n">'+x.conf+'</span></div>'}
+function renderFx(r){
+ var heat='',pos=0,h;
+ r.se.forEach(function(x,i){heat+=esc(r.t.slice(pos,x.s))+'<span title="Xác suất ước lượng '+Math.round(r.sp[i]*100)+'%" style="background:rgba(207,74,60,'+(r.sp[i]*0.6).toFixed(2)+')">'+esc(x.t)+'</span>';pos=x.e});
+ heat+=esc(r.t.slice(pos));
+ h='<div class="panel wide"><h3>AI Pattern Map</h3><p class="sub">Màu càng đậm, câu càng giống mẫu thống kê của văn bản AI. Đây là ước lượng, không phải kết luận.</p><div class="map">'+heat+'</div></div>';
+ h+='<div class="panel"><h3>Writing Fingerprint</h3><p class="sub">Hồ sơ đặc điểm văn phong của tài liệu ('+r.LG.name+').</p>'+r.fp.map(function(x){return'<div class="fr"><span>'+x[0]+'</span><b>'+x[1]+'</b><i style="width:'+Math.max(3,Math.round(x[2]*100))+'%"></i></div>'}).join('')+'</div>';
+ var sc='';
+ if(r.ps.length>=2)sc=r.ps.map(function(x,k){return'<div class="spw"><span>Đoạn '+(k+1)+' ('+x.ix.length+' câu)</span><b>'+Math.round(x.p*100)+'%</b></div>'}).join('')+'<p class="sub" style="margin-top:8px">'+(r.inc?'Các đoạn có mức khuôn mẫu chênh lệch rõ, nên xem lại xem có đoạn nào được viết hoặc chỉnh theo cách khác.':'Các đoạn khá nhất quán với nhau.')+'</p>';
+ else sc='<p class="sub">Chỉ có một đoạn (hoặc các đoạn quá ngắn), chưa đủ để so sánh giữa các đoạn.</p>';
+ if(r.n>=4&&r.pairs[0][0]>0.35)sc+='<p class="sub" style="margin-top:8px">Cặp câu trùng ý nhất: “'+esc(snip(r.se[r.pairs[0][1]].t))+'” và “'+esc(snip(r.se[r.pairs[0][2]].t))+'”.</p>';
+ h+='<div class="panel"><h3>Semantic Consistency</h3><p class="sub">Tính nhất quán giữa các đoạn và mức lặp ý.</p>'+sc+'</div>';
+ var top=r.se.map(function(x,i){return[r.sp[i],x.t]}).sort(function(a,b){return b[0]-a[0]}).slice(0,5);
+ h+='<div class="panel"><h3>Sentence Probability</h3><p class="sub">5 câu có đặc điểm thống kê giống mẫu AI nhất.</p>'+top.map(function(x){return'<div class="spw"><span>'+esc(snip(x[1]))+'</span><b>'+Math.round(x[0]*100)+'%</b></div>'}).join('')+'</div>';
+ var hs=r.ev.filter(function(x){return x.side==='human'});
+ h+='<div class="panel"><h3>Human Writing Signals</h3><p class="sub">Đặc điểm tương thích với văn bản do người viết.</p>'+(hs.length?hs.map(evRow).join(''):'<p class="sub">Chưa thấy dấu hiệu nổi bật.</p>')+'</div>';
+ var as=r.ev.filter(function(x){return x.side!=='human'}),tot=Prov.paste+Prov.typed;
+ var pv=tot?'Trong phiên này: '+Math.round(100*Prov.paste/tot)+'% ký tự được dán vào, '+Math.round(100*Prov.typed/tot)+'% được gõ trực tiếp. Chỉ mang tính bổ trợ vì dán từ trình soạn thảo khác là việc bình thường.':'Chưa có lịch sử chỉnh sửa hay metadata. Mục này chỉ hoạt động với văn bản soạn trực tiếp hoặc tài liệu có kèm lịch sử.';
+ h+='<div class="panel wide"><h3>AI Evidence Report</h3><p class="sub">Dấu hiệu, dẫn chứng trực tiếp và độ tin cậy của từng nhận định. Không kết luận chỉ dựa trên một dấu hiệu.</p>'+(as.length?as.map(evRow).join(''):'<p class="sub">Chưa thấy dấu hiệu đáng chú ý.</p>')+'<div class="sg-row"><div><b>Dấu vết hình thành văn bản</b><span class="d">'+pv+'</span></div><span class="pc n">Bổ trợ</span></div>'
+  +'<details style="margin-top:10px"><summary class="sub" style="cursor:pointer">Nguyên tắc để tránh nhận diện sai</summary><ul class="sub"><li>Văn phong học thuật chuẩn mực không được xem là dấu hiệu AI.</li><li>Lỗi chính tả không phải bằng chứng của người viết, vì AI có thể cố tình tạo lỗi.</li><li>Cảm xúc và trải nghiệm cá nhân không chứng minh tính xác thực.</li><li>Mỗi ngôn ngữ dùng bộ từ vựng và cú pháp riêng.</li><li>Văn bản càng ngắn thì kết quả càng kém tin cậy.</li><li>Khi dữ liệu không đủ, hệ thống nói rõ thay vì đoán.</li><li>Kết luận cần nhiều dấu hiệu độc lập cùng chỉ một hướng.</li></ul></details></div>';
+ $('#fx').innerHTML=h;
+}
+ta.addEventListener('paste',function(e){Prov.paste+=((e.clipboardData&&e.clipboardData.getData('text'))||'').length});
+ta.addEventListener('input',function(e){if(e.inputType==='insertText')Prov.typed+=(e.data||'').length});
+
+/* ---------- Nhận diện ngôn ngữ + thiết lập kiểu văn phong ---------- */
+var VNX=/[ăđơưạảãậắằẳẵặẹẻẽệềếểễịỉĩọỏõộốồổỗợờớởỡụủũựứừửữỳỷỹỵ]/gi;
+var SW={en:'the,and,of,to,in,is,that,it,for,with,as,was,on,are,this',fr:'le,la,les,des,et,est,une,que,pour,dans,qui,pas,sur,avec,au',es:'el,la,los,las,de,que,y,en,un,una,por,con,para,es,del',de:'der,die,das,und,ist,nicht,ein,eine,zu,mit,den,von,auf,für,ich',pt:'o,a,os,as,de,que,e,do,da,em,um,uma,para,com,não',id:'yang,dan,di,ini,itu,untuk,dengan,tidak,dari,pada,adalah,akan,ke,saya,kami',it:'il,la,di,che,e,un,una,per,con,non,sono,del,della,le,gli'};
+var LN={vi:'Tiếng Việt',en:'English',fr:'Français',es:'Español',de:'Deutsch',pt:'Português',id:'Bahasa Indonesia',it:'Italiano',zh:'中文',ja:'日本語',ko:'한국어',ru:'Русский',th:'ไทย',ar:'العربية'};
+var NV=/(?!x)x/giu;
+LP.gen={gen:NV,cau:NV,con:NV,st:NV,pers:NV,col:NV,over:NV,res:NV,self:NV,close:NV};
+function detectLang(t){
+ var L=(t.match(/\p{L}/gu)||[]).length||1,c=function(re){return(t.match(re)||[]).length/L},code;
+ if(c(/[\p{Script=Hiragana}\p{Script=Katakana}]/gu)>0.05)code='ja';
+ else if(c(/\p{Script=Han}/gu)>0.2)code='zh';
+ else if(c(/\p{Script=Hangul}/gu)>0.2)code='ko';
+ else if(c(/\p{Script=Cyrillic}/gu)>0.3)code='ru';
+ else if(c(/\p{Script=Thai}/gu)>0.3)code='th';
+ else if(c(/\p{Script=Arabic}/gu)>0.3)code='ar';
+ else if((t.match(VNX)||[]).length>=3)code='vi';
+ else{var w=t.toLowerCase().match(/\p{L}+/gu)||[],best='en',bs=0;
+  Object.keys(SW).forEach(function(k){var set=SW[k].split(','),h=w.filter(function(x){return set.indexOf(x)>=0}).length;if(h>bs){bs=h;best=k}});code=best}
+ return{code:code,name:LN[code],pack:code==='vi'||code==='en'?code:'gen'};
+}
+var STY={bc:['Báo cáo, học thuật',{phrase:.6,generic:.5,spec:.7,stance:.4,rhythm:.6,md:.6,long:1.4}],tv:['Tản văn, cảm nhận',{phrase:1.2,generic:1.2,spec:1.3,stance:1.5,rhythm:1.2,md:1.5,long:1}],tb:['Tin tức, bài blog',{phrase:.9,generic:.8,spec:1.2,stance:.7,rhythm:.8,md:.8,long:1.1}],th:['Thư, email',{phrase:1,generic:1,spec:.8,stance:1,rhythm:.8,md:1.3,long:1}],sc:['Truyện, sáng tạo',{phrase:1.3,generic:1.2,spec:1.5,stance:1.2,rhythm:1.5,md:1.5,long:1}],gc:['Ghi chú, yêu cầu, dàn ý',{phrase:.7,generic:.7,spec:.5,stance:.5,rhythm:.3,md:.2,long:1.4}],qc:['Quảng cáo, marketing',{phrase:.8,generic:.5,spec:.8,stance:.6,rhythm:1,md:.8,long:1}]};
+var ST={ok:false,sel:[],req:'',prof:{phrase:1,generic:1,spec:1,stance:1,rhythm:1,md:1,long:1},longOK:false};
+function applySetup(){
+ var P={phrase:0,generic:0,spec:0,stance:0,rhythm:0,md:0,long:0},k,sel=ST.sel;
+ for(k in P)P[k]=sel.length?sel.reduce(function(a,s){return a+STY[s][1][k]},0)/sel.length:1;
+ var r=ST.req.toLowerCase();
+ ST.longOK=/câu dài/.test(r)&&/(cho phép|chấp nhận|được phép|không sao|giữ)/.test(r);
+ if(/trang trọng|học thuật|khách quan|formal/.test(r)){P.stance*=.6;P.phrase*=.8}
+ if(/thân mật|đời thường|văn nói|gần gũi|casual/.test(r))P.stance*=1.3;
+ if(/(không|tránh)\s+(?:dùng\s+)?(?:ngôi (?:thứ )?nhất|tôi|mình)/.test(r))P.stance*=.5;
+ ST.prof=P;KEEP=[];CUSTOM=[];
+ var m=ST.req.match(/(?:giữ nguyên|thuật ngữ|không sửa)[^:：\n]*[:：]\s*([^.\n]+)/i);
+ if(m)KEEP=m[1].split(/[,;、]/).map(function(s){return s.trim().toLowerCase()}).filter(Boolean);
+ m=ST.req.match(/(?:tránh|không dùng|cấm)(?!\s+(?:ngôi|tôi|mình))[^:：\n]*[:：]\s*([^.\n]+)/i);
+ if(m)m[1].split(/[,;、]/).forEach(function(s){s=s.trim();if(s.length>1)CUSTOM.push({title:'Cụm bạn muốn tránh',reason:'Bạn đã yêu cầu tránh cụm này trong phần thiết lập.',alts:[],hint:'Thay bằng cách nói khác của bạn.',re:new RegExp(s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'giu')})});
+}
+function chips(){$('#chips').innerHTML=Object.keys(STY).map(function(k){return'<button data-s="'+k+'" class="'+(ST.sel.indexOf(k)>=0?'on':'')+'">'+STY[k][0]+'</button>'}).join('')}
+function openSetup(){ST.ok=false;$('#setup').hidden=false;$('#setsum').hidden=true;chips();schedule()}
+function setupDone(){
+ ST.req=$('#req').value;ST.ok=true;applySetup();$('#setup').hidden=true;
+ var s=$('#setsum');s.hidden=false;
+ s.innerHTML='<span>Kiểu văn phong: <b>'+(ST.sel.length?ST.sel.map(function(k){return STY[k][0]}).join(', '):'mặc định')+'</b>'+(ST.req.trim()?' · có yêu cầu riêng':'')+'</span><button data-s="edit">Đổi thiết lập</button>';
+ schedule();
+}
+$('#setup').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;
+ if(b.id==='s-go'){setupDone();return}
+ if(b.id==='s-def'){ST.sel=[];setupDone();return}
+ var k=b.getAttribute('data-s');if(!k)return;var i=ST.sel.indexOf(k);if(i>=0)ST.sel.splice(i,1);else ST.sel.push(k);chips()});
+$('#setsum').addEventListener('click',function(e){if(e.target.getAttribute('data-s')==='edit')openSetup()});
+chips();
+
+/* ---------- Trang lập dàn bài (hỏi từng bước, AI viết bài tham khảo) ---------- */
+var att=function(s){return esc(s).replace(/"/g,'&quot;')};
+var PL={topic:'',claim:'',pts:['',''],steps:[],i:0,ans:{},qs:{},essay:'',busy:false};
+var TELL={'háo hức':'tim đập nhanh, bước chân vội, cứ nhìn ra ngoài cửa sổ','hồi hộp':'lòng bàn tay ướt, nuốt nước bọt liên tục','vui':'khoé miệng cứ cong lên, bật cười thành tiếng','buồn':'cổ họng nghẹn lại, nhìn sang chỗ khác','đẹp':'màu gì, ánh sáng ra sao, điều gì khiến bạn dừng lại','tuyệt vời':'điều gì khiến bạn muốn kể ngay cho người khác','ấn tượng':'chi tiết nào còn đọng lại sau nhiều ngày','xúc động':'mắt cay, giọng run, im lặng một lúc','tự hào':'ngực ưỡn lên, muốn kể ngay cho ai đó','thú vị':'điều gì khiến bạn quên mất thời gian','lo lắng':'cứ kiểm tra điện thoại, ngón tay gõ lên bàn','sợ':'sống lưng lạnh, bước chậm lại','yên bình':'âm thanh còn nghe được, nhịp thở của bạn','đáng yêu':'họ làm gì khiến bạn mỉm cười','kinh ngạc':'bạn khựng lại, quên cả nói','beautiful':'màu sắc, ánh sáng, điều khiến bạn dừng lại','amazing':'điều gì khiến bạn nhìn mãi','happy':'khuôn mặt và đôi tay bạn làm gì','nervous':'đôi tay bạn làm gì'};
+function sdt(x){return Object.keys(TELL).filter(function(k){return new RegExp('(?<![\\p{L}])'+k+'(?![\\p{L}])','iu').test(x)})}
+function tellMsg(v){var m=sdt(v).slice(0,2).map(function(k){return'“'+k+'” là cách nói thẳng cảm xúc hoặc nhận xét. Thử cho người đọc thấy nó bằng chi tiết: '+TELL[k]+'.'});if(v.trim()&&v.trim().split(/\s+/).length<12)m.push('Câu trả lời còn ngắn. Thử thêm một chi tiết nhìn, nghe, ngửi hoặc chạm.');return m.join(' ')}
+function snp(s,n){s=(s||'').replace(/\s+/g,' ').trim();return s.length>n?s.slice(0,n-1)+'…':s}
+var HAS={conc:function(a){return /\d|(?<=[^.!?…\n\s]\s)\p{Lu}\p{L}+/u.test(a)},sense:function(a){return /(?<![\p{L}])(?:thấy|nghe|ngửi|mùi|tiếng|màu|ánh|nóng|lạnh|ướt|mềm|cứng|vị|nhìn|sờ|chạm|smell|sound|saw|heard|taste|cold|warm)(?![\p{L}])/iu.test(a)},body:function(a){return /(?<![\p{L}])(?:tim|tay|chân|hơi thở|thở|run|mồ hôi|cổ họng|nuốt|nhấp nhổm|bước|mắt|môi|heart|hands|breath)(?![\p{L}])/iu.test(a)}};
+function plSteps(){
+ var s=[{ph:'Mở bài',k:'hook'},{ph:'Mở bài',k:'feel'},{ph:'Mở bài',k:'link'}];
+ PL.pts.forEach(function(p,i){if(p.trim())s.push({ph:'Thân bài',k:'scene',p:i},{ph:'Thân bài',k:'detail',p:i},{ph:'Thân bài',k:'meaning',p:i})});
+ s.push({ph:'Kết bài',k:'realize'},{ph:'Kết bài',k:'call'});return s;
+}
+function skipStep(st,prev){prev=prev||'';
+ if(st.k==='feel')return HAS.body(prev)&&!sdt(prev).length;
+ if(st.k==='detail')return HAS.conc(prev)&&HAS.sense(prev);
+ return false}
+function ruleQ(st,prev){
+ var T='“'+PL.topic.trim()+'”',C='“'+PL.claim.trim()+'”',P=st.p!=null?'“'+PL.pts[st.p].trim()+'”':'',tw=prev?sdt(prev)[0]:null;
+ switch(st.k){
+ case 'hook':return'Hãy quay lại một khoảnh khắc gắn với '+T+' mà bạn còn nhớ rõ nhất. Chuyện gì đã xảy ra, ở đâu, vào lúc nào?';
+ case 'feel':return tw?'Bạn viết “'+tw+'”. Lúc đó cơ thể bạn phản ứng thế nào (tim, tay, hơi thở, bước chân)? Hãy tả điều đó thay vì gọi tên cảm xúc.':'Lúc đó bạn cảm thấy thế nào? Hồi hộp, háo hức hay điều gì khác? Cơ thể bạn phản ứng ra sao?';
+ case 'link':return'Từ khoảnh khắc đó, vì sao bạn tin rằng '+C+'?';
+ case 'scene':return'Về luận cứ '+P+': hãy kể một lần cụ thể (ở đâu, khi nào, có ai) mà ý này thể hiện rõ nhất.';
+ case 'detail':return HAS.conc(prev||'')?'Trong lần đó, bạn nhìn, nghe, ngửi hoặc chạm vào điều gì? Chọn một chi tiết nhỏ mà người khác dễ bỏ qua.':'Bạn còn nhớ tên người, địa điểm, con số hay thời điểm nào trong lần đó không?';
+ case 'meaning':return'Chi tiết đó giúp chứng minh '+C+' ở điểm nào?';
+ case 'realize':return'Sau tất cả, điều gì đã thay đổi trong cách bạn nhìn '+T+'?';
+ default:return'Bạn muốn người đọc nghĩ, cảm hoặc làm gì khi đọc xong?'}
+}
+var PURP={hook:'gợi người viết nhớ lại một khoảnh khắc cụ thể để làm mở bài',feel:'hỏi cảm giác và phản ứng cơ thể ở khoảnh khắc đó (show, don’t tell)',link:'nối khoảnh khắc đó với luận điểm',scene:'xin một tình huống cụ thể (ở đâu, khi nào, có ai) cho luận cứ',detail:'xin chi tiết giác quan hoặc tên, con số mà câu trả lời trước còn thiếu',meaning:'hỏi chi tiết đó chứng minh luận điểm thế nào',realize:'hỏi điều người viết nhận ra hoặc thay đổi (kết bài)',call:'hỏi điều người viết muốn người đọc nghĩ hoặc làm (kết bài)'};
+function ctx(){return JSON.stringify({chu_de:PL.topic,luan_diem:PL.claim,luan_cu:PL.pts.filter(function(p){return p.trim()}),da_tra_loi:PL.steps.slice(0,PL.i).map(function(s,k){return{buoc:s.ph+' / '+s.k,tra_loi:PL.ans[k]||''}})})}
+async function aiText(prompt){
+ try{var s=window.claude&&await window.claude.use('sample');if(!s)return null;
+  var r=await Promise.race([s(prompt,{modelTier:'quick'}),new Promise(function(_,rej){setTimeout(function(){rej(0)},25000)})]);
+  return((r&&r.text)||'').trim()||null}catch(e){return null}
+}
+async function askQ(){
+ var st=PL.steps[PL.i],prev=PL.i?PL.ans[PL.i-1]:'';
+ var p=await aiText('Bạn là người hướng dẫn viết. Dựa trên dữ liệu JSON bên dưới, hãy viết MỘT câu hỏi duy nhất (tối đa 45 từ) bằng đúng ngôn ngữ của người viết, nhằm '+PURP[st.k]+(st.p!=null?'. Luận cứ đang xét: '+PL.pts[st.p]:'')+'. Hãy bám vào từ ngữ cụ thể trong câu trả lời gần nhất của người viết nếu có, không bịa chi tiết, không đưa sẵn đáp án. Chỉ trả về câu hỏi.\n\n'+ctx());
+ PL.qs[PL.i]=p&&p.length<400?p:ruleQ(st,prev);
+}
+function wiz(){
+ var w=$('#p-wiz'),st=PL.steps[PL.i],phs=['Mở bài','Thân bài','Kết bài'];
+ w.hidden=false;
+ w.innerHTML='<div class="stp">'+phs.map(function(p){return'<span class="'+(p===st.ph?'on':'')+'">'+p+'</span>'}).join('')+'<small>Câu '+(PL.i+1)+'/'+PL.steps.length+'</small></div>'+(PL.busy?'<div class="wait">Đang nghĩ câu hỏi từ nội dung bạn đã viết…</div>':'<div class="q"><p>'+esc(PL.qs[PL.i])+'</p><textarea id="p-ans" rows="4" placeholder="Câu trả lời của bạn…">'+esc(PL.ans[PL.i]||'')+'</textarea><div class="tell" id="p-tell" hidden></div></div><div class="row"><button class="pri" data-p="next">Tiếp tục</button><button data-p="skip">Bỏ qua câu này</button>'+(PL.i?'<button data-p="back">Quay lại</button>':'')+'</div>');
+}
+async function show(){
+ if(PL.i>=PL.steps.length){tree();return}
+ $('#p-tree').hidden=true;
+ if(!PL.qs[PL.i]){PL.busy=true;wiz();await askQ();PL.busy=false}
+ wiz();
+}
+function advance(){
+ var j=PL.i+1;
+ while(j<PL.steps.length&&skipStep(PL.steps[j],PL.ans[j-1]))j++;
+ PL.i=j;show();
+}
+function tree(){
+ $('#p-wiz').hidden=true;
+ var S=PL.steps,idx={};S.forEach(function(s,k){idx[s.k+(s.p!=null?s.p:'')]=k});
+ var L=function(lbl,k){return k!=null&&PL.ans[k]?'<li><b>'+lbl+':</b> '+esc(snp(PL.ans[k],90))+'</li>':''};
+ var th=PL.pts.map(function(p,i){return p.trim()?'<li><b>'+esc(p)+'</b><ul>'+L('Cảnh',idx['scene'+i])+L('Chi tiết',idx['detail'+i])+L('Ý nghĩa',idx['meaning'+i])+'</ul></li>':''}).join('');
+ var t=$('#p-tree');t.hidden=false;
+ t.innerHTML='<div class="panel"><h2>Sơ đồ dàn bài</h2><ul class="tree"><li><b>'+esc(PL.topic)+'</b><ul><li><b>Luận điểm:</b> '+esc(PL.claim)+'</li><li><b>Mở bài</b><ul>'+L('Khoảnh khắc',idx.hook)+L('Cảm giác',idx.feel)+L('Nối tới luận điểm',idx.link)+'</ul></li><li><b>Thân bài</b><ul>'+th+'</ul></li><li><b>Kết bài</b><ul>'+L('Nhận ra',idx.realize)+L('Gửi tới người đọc',idx.call)+'</ul></li></ul></li></ul><div class="row"><button class="pri" data-p="essay">Viết bài tham khảo</button><button data-p="restart">Làm lại từ đầu</button></div></div><div id="p-essay"></div>';
+}
+function fbEssay(){
+ var g=function(k){return(PL.ans[k]||'').trim()},mo=[],ke=[],ps=[];
+ PL.steps.forEach(function(s,k){if(s.ph==='Mở bài')mo.push(g(k));else if(s.ph==='Kết bài')ke.push(g(k))});
+ ps.push(mo.filter(Boolean).join(' '));
+ PL.pts.forEach(function(p,i){if(!p.trim())return;var b=[];PL.steps.forEach(function(s,k){if(s.p===i)b.push(g(k))});ps.push(b.filter(Boolean).join(' '))});
+ ps.push(ke.filter(Boolean).join(' '));return ps.filter(Boolean).join('\n\n');
+}
+async function essay(){
+ var box=$('#p-essay');box.innerHTML='<div class="panel"><div class="wait">Đang viết bài tham khảo từ dàn bài của bạn…</div></div>';
+ PL.i=PL.steps.length;
+ var out=await aiText('Bạn là biên tập viên. Dựa trên dàn bài và các câu trả lời của người viết (JSON bên dưới), hãy viết một bài văn tham khảo khoảng 350 đến 500 từ, đúng ngôn ngữ của người viết, có mở bài, thân bài, kết bài theo thứ tự. Quy tắc: giữ ngôi thứ nhất và giọng tự nhiên của người viết; chỉ dùng chi tiết người viết đã cung cấp, nếu thiếu thì để chỗ trống dạng [bạn bổ sung chi tiết]; áp dụng “show, don’t tell” (tả hành động và giác quan thay vì gọi tên cảm xúc); tránh từ nối sáo rỗng như “hơn nữa”, “tóm lại”, “bên cạnh đó”; thay đổi độ dài câu cho tự nhiên. Chỉ trả về bài văn, không giải thích.\n\n'+ctx());
+ var ai=!!out;if(!out)out=fbEssay();PL.essay=out;
+ box.innerHTML='<div class="panel"><h2>Bài tham khảo</h2><p class="sub">'+(ai?'Bài do AI viết từ dàn bài của bạn. Hãy xem đây là bản tham khảo: viết lại bằng giọng của bạn rồi kiểm tra văn phong.':'Chưa kết nối được AI nên đây là bản ghép từ câu trả lời của bạn theo thứ tự dàn bài.')+'</p><div class="essay">'+esc(out)+'</div><div class="row"><button class="pri" data-p="draft">Đưa sang kiểm tra văn phong</button><button data-p="copy">Chép bài</button></div></div>';
+}
+function pts(){$('#p-pts').innerHTML=PL.pts.map(function(p,i){return'<div class="row" style="margin-top:6px"><input data-i="'+i+'" value="'+att(p)+'" placeholder="Luận cứ '+(i+1)+'" style="flex:1"><button data-p="del" data-i="'+i+'" aria-label="Xoá luận cứ">×</button></div>'}).join('')}
+var vp=$('#v-plan');
+vp.addEventListener('input',function(e){var t=e.target;
+ if(t.id==='p-topic')PL.topic=t.value;
+ else if(t.id==='p-claim')PL.claim=t.value;
+ else if(t.hasAttribute('data-i'))PL.pts[+t.getAttribute('data-i')]=t.value;
+ else if(t.id==='p-ans'){PL.ans[PL.i]=t.value;var m=tellMsg(t.value),d=$('#p-tell');d.hidden=!m;d.textContent=m}
+});
+vp.addEventListener('click',function(e){var b=e.target.closest('[data-p]');if(!b)return;var a=b.getAttribute('data-p');
+ if(a==='add'){if(PL.pts.length<4){PL.pts.push('');pts()}}
+ else if(a==='del'){PL.pts.splice(+b.getAttribute('data-i'),1);if(!PL.pts.length)PL.pts=[''];pts()}
+ else if(a==='go'){
+  if(!PL.topic.trim()||!PL.claim.trim()||!PL.pts.some(function(p){return p.trim()})){$('#p-msg').textContent='Hãy nhập chủ đề, luận điểm và ít nhất một luận cứ.';return}
+  $('#p-msg').textContent='';PL.steps=plSteps();PL.i=0;PL.ans={};PL.qs={};show()}
+ else if(a==='next'){PL.ans[PL.i]=$('#p-ans').value;advance()}
+ else if(a==='skip'){PL.ans[PL.i]='';advance()}
+ else if(a==='back'){PL.i=Math.max(0,PL.i-1);show()}
+ else if(a==='essay'){essay()}
+ else if(a==='restart'){PL.i=0;PL.ans={};PL.qs={};$('#p-tree').hidden=true;$('#p-wiz').hidden=true}
+ else if(a==='draft'){ta.value=PL.essay;setMode('edit');location.hash='#kiem-tra'}
+ else if(a==='copy'){try{navigator.clipboard.writeText(PL.essay).then(function(){b.textContent='Đã chép'})}catch(x){}}
+});
+
+function route(){var h=location.hash==='#dan-bai'?'plan':location.hash==='#dau-vet'?'fx':'check';['check','fx','plan'].forEach(function(k){$('#v-'+k).hidden=h!==k;$('#t-'+k).className=h===k?'on':''})}
+window.addEventListener('hashchange',route);route();pts();
+window.X={analyze:analyze,scan:scan,build:build,ST:ST,applySetup:applySetup,detectLang:detectLang,sents:sents};
+setMode('edit');
+})();
+</script>
+</body>
+</html>
